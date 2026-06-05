@@ -43,6 +43,9 @@ const progressBar = document.querySelector(".progress-bar");
 const stage = document.querySelector(".stage");
 const pianoPanel = document.querySelector("#pianoPanel");
 const pianoKeys = document.querySelector("#pianoKeys");
+const pianoVolume = document.querySelector("#pianoVolume");
+const pianoVolumeTrack = document.querySelector("#pianoVolumeTrack");
+const pianoVolumeValue = document.querySelector("#pianoVolumeValue");
 const AudioEngine = window.AudioContext || window.webkitAudioContext;
 
 let audioCtx;
@@ -50,6 +53,7 @@ let inputStream;
 let mixDestination;
 let analyser;
 let masterGain;
+let pianoGain;
 let mediaRecorder;
 let activePad = null;
 let mixRecorder = null;
@@ -68,6 +72,8 @@ let diskDrag = null;
 let diskHoldTimer = 0;
 let masterDrag = null;
 let masterVolume = 1;
+let pianoVolumeLevel = 1;
+let pianoVolumeDrag = null;
 let waveLevel = 0;
 const activePianoNotes = new Map();
 const sourceIntervals = Array(sourceNames.length).fill(1);
@@ -207,9 +213,12 @@ async function ensureEngine(resume = true) {
     mixDestination = audioCtx.createMediaStreamDestination();
     analyser = audioCtx.createAnalyser();
     masterGain = audioCtx.createGain();
+    pianoGain = audioCtx.createGain();
     analyser.fftSize = 2048;
     analyser.smoothingTimeConstant = 0.78;
     masterGain.gain.value = masterVolume;
+    pianoGain.gain.value = pianoVolumeLevel;
+    pianoGain.connect(masterGain);
     masterGain.connect(analyser);
     masterGain.connect(mixDestination);
     analyser.connect(audioCtx.destination);
@@ -243,6 +252,11 @@ function midiToFrequency(midi) {
 }
 
 function connectPianoNode(node) {
+  if (pianoGain) {
+    node.connect(pianoGain);
+    return;
+  }
+
   if (masterGain) {
     node.connect(masterGain);
     return;
@@ -1179,10 +1193,30 @@ function updateMasterVolume(nextVolume) {
   masterBtn.setAttribute("aria-label", `전체 볼륨 ${volumePercent}%`);
 }
 
+function updatePianoVolume(nextVolume) {
+  pianoVolumeLevel = Math.max(0, Math.min(1.25, nextVolume));
+  if (pianoGain) {
+    pianoGain.gain.value = pianoVolumeLevel;
+  }
+
+  const normalized = pianoVolumeLevel / 1.25;
+  pianoPanel.style.setProperty("--piano-volume-level", `${Math.round(normalized * 100)}%`);
+  pianoPanel.style.setProperty("--piano-volume-knob", `${Math.round((1 - normalized) * 100)}%`);
+  const volumePercent = Math.round(pianoVolumeLevel * 100);
+  pianoVolumeValue.textContent = String(volumePercent);
+  pianoVolume.setAttribute("aria-label", `피아노 볼륨 ${volumePercent}%`);
+}
+
 function setMasterVolumeFromPointer(event) {
   const rect = masterTrack.getBoundingClientRect();
   const normalized = 1 - (event.clientY - rect.top) / rect.height;
   updateMasterVolume(normalized * 1.25);
+}
+
+function setPianoVolumeFromPointer(event) {
+  const rect = pianoVolumeTrack.getBoundingClientRect();
+  const normalized = 1 - (event.clientY - rect.top) / rect.height;
+  updatePianoVolume(normalized * 1.25);
 }
 
 function updateMasterMenu() {
@@ -1740,6 +1774,7 @@ createSourceButtons();
 renderTracks();
 startUiLoop();
 updateMasterVolume(masterVolume);
+updatePianoVolume(pianoVolumeLevel);
 [
   mixRecBtn,
   playPauseBtn,
@@ -1780,6 +1815,63 @@ function stopMasterVolumeDrag(event) {
   control.addEventListener("pointerup", stopMasterVolumeDrag);
   control.addEventListener("pointercancel", stopMasterVolumeDrag);
 });
+
+function startPianoVolumeDrag(event) {
+  event.preventDefault();
+  pianoVolumeDrag = event.pointerId;
+  pianoVolume.classList.add("dragging");
+  event.currentTarget.setPointerCapture(event.pointerId);
+  setPianoVolumeFromPointer(event);
+}
+
+function movePianoVolumeDrag(event) {
+  if (pianoVolumeDrag !== event.pointerId) return;
+  setPianoVolumeFromPointer(event);
+}
+
+function stopPianoVolumeDrag(event) {
+  if (pianoVolumeDrag !== event.pointerId) return;
+  pianoVolumeDrag = null;
+  pianoVolume.classList.remove("dragging");
+}
+
+[pianoVolume, pianoVolumeTrack].forEach((control) => {
+  control.addEventListener("pointerdown", startPianoVolumeDrag);
+  control.addEventListener("pointermove", movePianoVolumeDrag);
+  control.addEventListener("pointerup", stopPianoVolumeDrag);
+  control.addEventListener("pointercancel", stopPianoVolumeDrag);
+});
+
+["selectstart", "dragstart", "contextmenu"].forEach((eventName) => {
+  document.addEventListener(eventName, (event) => {
+    if (event.target instanceof Element && event.target.closest("input[type='file']")) return;
+    event.preventDefault();
+  });
+});
+
+["gesturestart", "gesturechange", "gestureend"].forEach((eventName) => {
+  document.addEventListener(
+    eventName,
+    (event) => {
+      event.preventDefault();
+    },
+    { passive: false }
+  );
+});
+
+let lastTouchEndAt = 0;
+document.addEventListener(
+  "touchend",
+  (event) => {
+    const now = Date.now();
+    if (now - lastTouchEndAt < 360) {
+      event.preventDefault();
+    }
+    lastTouchEndAt = now;
+  },
+  { passive: false }
+);
+
 masterMenu.addEventListener("click", (event) => {
   const action = event.target.closest("button")?.dataset.action;
   if (!action) return;

@@ -2,13 +2,16 @@
 <html lang="ko">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
     <title>Kuma Looper</title>
     <meta name="theme-color" content="#292932" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./resource/app-icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./resource/app-icon-192.png" />
-    <link rel="stylesheet" href="./styles.css?v=20260605-wave-off" />
+    <link rel="stylesheet" href="./styles.css?v=20260606-touch-piano" />
   </head>
   <body>
     <main class="app-shell">
@@ -78,6 +81,13 @@
             <span>C4-B5</span>
           </div>
           <div class="piano-keys" id="pianoKeys"></div>
+          <div class="piano-volume" id="pianoVolume" aria-label="피아노 볼륨">
+            <span class="piano-volume-value" id="pianoVolumeValue">100</span>
+            <div class="piano-volume-track" id="pianoVolumeTrack">
+              <span class="piano-volume-fill" id="pianoVolumeFill"></span>
+              <span class="piano-volume-knob" id="pianoVolumeKnob"></span>
+            </div>
+          </div>
         </section>
 
         <div class="status-pill" id="micStatus">Mic ready</div>
@@ -131,6 +141,6 @@
       </article>
     </template>
 
-    <script src="./app.js?v=20260605-wave-off"></script>
+    <script src="./app.js?v=20260606-touch-piano"></script>
   </body>
 </html>
