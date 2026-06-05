@@ -272,6 +272,7 @@ img {
   border-radius: 19px;
   color: transparent;
   cursor: pointer;
+  pointer-events: none;
 }
 
 .group-panel img {
@@ -279,6 +280,8 @@ img {
   left: 19.9275%;
   top: 3.7554%;
   width: 60.8696%;
+  cursor: pointer;
+  pointer-events: auto;
   transition: filter 90ms ease, transform 90ms ease;
 }
 

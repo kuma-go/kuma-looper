@@ -1,5 +1,5 @@
-const optionNames = ["기본비트", "에코", "베이스", "마이크", "AUX", "DISK UI", "피아노", "기계음"];
-const optionKeys = ["beat", "echo", "bass", "mic", "aux", "disk", "piano", "robot"];
+const optionNames = ["마이크", "AUX", "기본비트", "에코", "베이스", "기계음", "DISK UI", "피아노"];
+const optionKeys = ["mic", "aux", "beat", "echo", "bass", "robot", "disk", "piano"];
 const sourceNames = [
   "G1-1",
   "G1-2",
@@ -89,6 +89,7 @@ const volumeDrag = {
   maxOffset: 18
 };
 const optionStates = [false, false, false, false, false, false, false, false];
+const optionIndexByKey = Object.fromEntries(optionKeys.map((key, index) => [key, index]));
 const pressedButtons = new WeakSet();
 const pianoWhiteNotes = [
   { note: "C4", midi: 60 },
@@ -190,7 +191,7 @@ async function ensureAudio() {
 
   await ensureEngine();
 
-  if (!optionStates[3]) {
+  if (!isOptionOn("mic")) {
     throw new Error("Microphone option is off.");
   }
 
@@ -270,7 +271,7 @@ function connectPianoNode(node) {
 }
 
 async function startPianoNote(pointerId, midi, button) {
-  if (!optionStates[6] || activePianoNotes.has(pointerId)) return;
+  if (!isOptionOn("piano") || activePianoNotes.has(pointerId)) return;
   await ensureEngine();
 
   const now = audioCtx.currentTime;
@@ -423,7 +424,9 @@ function makeRobotBuffer(sourceBuffer) {
 }
 
 function createProcessedRecorderStream() {
-  if ((!optionStates[1] && !optionStates[2]) || !inputStream || !audioCtx) {
+  const echoOn = isOptionOn("echo");
+  const bassOn = isOptionOn("bass");
+  if ((!echoOn && !bassOn) || !inputStream || !audioCtx) {
     return { stream: inputStream, cleanup: () => {} };
   }
 
@@ -433,7 +436,7 @@ function createProcessedRecorderStream() {
   let mainOut = source;
   const nodes = [source, dry];
 
-  if (optionStates[2]) {
+  if (bassOn) {
     const lowShelf = audioCtx.createBiquadFilter();
     const midCut = audioCtx.createBiquadFilter();
     const bassDrive = audioCtx.createGain();
@@ -454,11 +457,11 @@ function createProcessedRecorderStream() {
     nodes.push(lowShelf, midCut, bassDrive);
   }
 
-  dry.gain.value = optionStates[1] ? 0.86 : 1;
+  dry.gain.value = echoOn ? 0.86 : 1;
   mainOut.connect(dry);
   dry.connect(destination);
 
-  if (optionStates[1]) {
+  if (echoOn) {
     const delay = audioCtx.createDelay(1);
     const feedback = audioCtx.createGain();
     const wet = audioCtx.createGain();
@@ -813,8 +816,8 @@ async function startPadRecording(button, name, slotIndex) {
       chunks,
       startedAt,
       cleanup: recorderInput.cleanup,
-      bassShift: optionStates[2],
-      robotize: optionStates[7]
+      bassShift: isOptionOn("bass"),
+      robotize: isOptionOn("robot")
     };
     button.classList.add("recording");
     updateSourceSlotState(slotIndex);
@@ -924,12 +927,13 @@ function renderOptions() {
   optionGrid.innerHTML = "";
 
   optionNames.forEach((name, index) => {
+    const key = optionKeys[index];
     const button = optionTemplate.content.firstElementChild.cloneNode(true);
     const label = button.querySelector(".option-label");
 
     button.setAttribute("aria-label", `${name} 옵션 ${optionStates[index] ? "켜짐" : "꺼짐"}`);
     button.dataset.label = name;
-    button.dataset.option = optionKeys[index];
+    button.dataset.option = key;
     label.textContent = name;
     attachTouchFeedback(button);
 
@@ -937,7 +941,7 @@ function renderOptions() {
       optionStates[index] = !optionStates[index];
       syncOptionButton(index);
 
-      if (index === 0) {
+      if (key === "beat") {
         if (optionStates[index]) {
           try {
             if (!(await createDefaultBeat())) {
@@ -952,15 +956,15 @@ function renderOptions() {
         }
       }
 
-      if (index === 1) {
+      if (key === "echo") {
         setStatus(optionStates[index] ? "Echo on" : "Echo off");
       }
 
-      if (index === 2) {
+      if (key === "bass") {
         setStatus(optionStates[index] ? "Bass on" : "Bass off");
       }
 
-      if (index === 3) {
+      if (key === "mic") {
         if (optionStates[index]) {
           try {
             await ensureAudio();
@@ -976,7 +980,7 @@ function renderOptions() {
         }
       }
 
-      if (index === 4) {
+      if (key === "aux") {
         if (optionStates[index]) {
           const hasAux = await checkAuxInput();
           if (hasAux) {
@@ -990,18 +994,18 @@ function renderOptions() {
         }
       }
 
-      if (index === 5) {
+      if (key === "disk") {
         setStatus(optionStates[index] ? "Disk UI on" : "Disk UI off");
       }
 
-      if (index === 6) {
+      if (key === "piano") {
         if (!optionStates[index]) {
           stopAllPianoNotes();
         }
         setStatus(optionStates[index] ? "Piano on" : "Piano off");
       }
 
-      if (index === 7) {
+      if (key === "robot") {
         setStatus(optionStates[index] ? "Robot on" : "Robot off");
       }
 
@@ -1021,6 +1025,17 @@ function attachTouchFeedback(control, target = control) {
   });
 }
 
+function isOptionOn(key) {
+  return Boolean(optionStates[optionIndexByKey[key]]);
+}
+
+function setOptionOn(key, value) {
+  const index = optionIndexByKey[key];
+  if (index === undefined) return;
+  optionStates[index] = value;
+  syncOptionButton(index);
+}
+
 function createPianoKey(note, midi, type, keyIndex) {
   const key = document.createElement("button");
   key.type = "button";
@@ -1032,7 +1047,7 @@ function createPianoKey(note, midi, type, keyIndex) {
 
   key.addEventListener("pointerdown", async (event) => {
     event.preventDefault();
-    if (!optionStates[6]) return;
+    if (!isOptionOn("piano")) return;
     key.setPointerCapture(event.pointerId);
     try {
       await startPianoNote(event.pointerId, midi, key);
@@ -1109,10 +1124,9 @@ function clearTrackAt(slotIndex) {
   tracks[slotIndex] = null;
   if (wasDefaultBeat) {
     beatSlotIndex = null;
-    optionStates[0] = false;
+    setOptionOn("beat", false);
     sourceNames[slotIndex] = `G1-${slotIndex + 1}`;
     sourceGrid.children[slotIndex].querySelector(".source-title").textContent = sourceNames[slotIndex];
-    syncOptionButton(0);
   }
   const slot = sourceGrid.children[slotIndex];
   sourceIntervals[slotIndex] = 1;
@@ -1327,7 +1341,7 @@ function reverseBuffer(buffer) {
 }
 
 function reverseAllLoops() {
-  if (!optionStates[5] || !audioCtx) return;
+  if (!isOptionOn("disk") || !audioCtx) return;
   tracks.filter(Boolean).forEach((track) => {
     stopTrack(track, true);
     track.originalBuffer = reverseBuffer(track.originalBuffer || track.buffer);
@@ -1616,7 +1630,7 @@ async function toggleMixRecording() {
 
   try {
     await ensureEngine();
-    if (optionStates[3]) {
+    if (isOptionOn("mic")) {
       await ensureAudio();
     }
   } catch (error) {
@@ -1693,8 +1707,7 @@ function clearAll() {
   tracks = Array(sourceNames.length).fill(null);
   sourceIntervals.fill(1);
   beatSlotIndex = null;
-  optionStates[0] = false;
-  syncOptionButton(0);
+  setOptionOn("beat", false);
   isPlaying = true;
   playPauseIcon.src = "./resource/icon_temporarystop.svg";
   if (oldBeatSlotIndex !== null) {
@@ -1915,7 +1928,7 @@ masterMenu.addEventListener("click", (event) => {
   closeMasterMenu();
 });
 diskArt.addEventListener("pointerdown", (event) => {
-  if (!optionStates[5]) return;
+  if (!isOptionOn("disk")) return;
   event.preventDefault();
   const startAngle = getDiskPointerAngle(event);
   const startRotation = getCurrentDiskVisualRotation();
