@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Kuma Looper</title>
+    <meta name="theme-color" content="#292932" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./resource/app-icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./resource/app-icon-192.png" />
+    <link rel="stylesheet" href="./styles.css?v=20260605-wave-off" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="stage" aria-label="Kuma Looper 루프스테이션">
+        <div class="progress-layer" aria-hidden="true">
+          <img class="progress-track" src="./resource/progess_track.svg" alt="" draggable="false" />
+          <img class="progress-bar" src="./resource/progess_bar.svg" alt="" draggable="false" />
+        </div>
+
+        <section class="option-grid" id="optionGrid" aria-label="옵션 토글"></section>
+
+        <section class="group-layer" aria-label="소스 그룹 정지">
+          <button class="group-panel group-1" type="button" data-group="0" aria-label="리듬소스그룹 그룹 정지">
+            <img src="./resource/group_btn.svg" alt="" draggable="false" />
+          </button>
+          <button class="group-panel group-2" type="button" data-group="1" aria-label="화음소스그룹 그룹 정지">
+            <img src="./resource/group_btn.svg" alt="" draggable="false" />
+          </button>
+          <button class="group-panel group-3" type="button" data-group="2" aria-label="릭소스그룹 그룹 정지">
+            <img src="./resource/group_btn.svg" alt="" draggable="false" />
+          </button>
+        </section>
+        <section class="source-grid" id="sourceGrid" aria-label="소스 그룹"></section>
+        <div class="source-popup" id="sourcePopup" hidden>
+          <button type="button" data-action="rename">소스이름변경</button>
+          <button type="button" data-action="save">파일로저장</button>
+          <button type="button" data-action="load">소스불러오기</button>
+          <button type="button" data-action="copy">소스복제</button>
+          <button type="button" data-action="paste">붙여넣기</button>
+          <button type="button" data-action="clear">선택소스삭제</button>
+        </div>
+        <input id="sourceFileInput" type="file" accept="audio/*,.webm,.wav,.mp3,.m4a,.ogg" hidden />
+
+        <img class="display-art" src="./resource/display.svg" alt="" draggable="false" />
+        <img class="disk-fx-art" src="./resource/disk_fx.svg" alt="" draggable="false" />
+        <img class="disk-art" src="./resource/disk.svg" alt="" draggable="false" />
+        <img class="kuma-disk-art" src="./resource/kuma_disk.svg" alt="" draggable="false" />
+        <div class="disk-reactor" aria-hidden="true"></div>
+        <img class="master-track" src="./resource/mastervolume_track.svg" alt="" draggable="false" />
+        <img class="master-bar" src="./resource/mastervolume_bar.svg" alt="" draggable="false" />
+        <img class="master-btn" src="./resource/master_volume_btn.svg" alt="" draggable="false" />
+        <span class="master-value" id="masterValue">100</span>
+
+        <button class="hotspot rec-button" id="mixRecBtn" type="button" aria-label="믹스 녹음">
+          <img src="./resource/Rec_btn.svg" alt="" draggable="false" />
+        </button>
+        <button class="hotspot icon-button play" id="playPauseBtn" type="button" aria-label="재생 또는 일시정지">
+          <img id="playPauseIcon" src="./resource/icon_temporarystop.svg" alt="" draggable="false" />
+        </button>
+        <button class="hotspot icon-button clear" id="clearBtn" type="button" aria-label="전체 메뉴">
+          <img src="./resource/menu_btn.svg" alt="" draggable="false" />
+        </button>
+        <div class="master-menu" id="masterMenu" hidden>
+          <button type="button" data-action="clear-all">전체 초기화</button>
+          <button type="button" data-action="toggle-playback">전체 멈춤</button>
+        </div>
+
+        <div class="live-display" aria-label="믹스 상태">
+          <canvas id="scope" width="340" height="70" aria-hidden="true"></canvas>
+          <strong id="loopCount">0 loops</strong>
+          <span id="mixTimer">00:00</span>
+        </div>
+
+        <section class="piano-panel" id="pianoPanel" aria-label="피아노 건반" aria-hidden="true">
+          <div class="piano-strip">
+            <span>PIANO</span>
+            <span>C4-B5</span>
+          </div>
+          <div class="piano-keys" id="pianoKeys"></div>
+        </section>
+
+        <div class="status-pill" id="micStatus">Mic ready</div>
+        <div class="engraving" aria-hidden="true">Kuma Looper . made carksk@naver.com</div>
+        <div class="hint" id="hint">소스 버튼을 누르고 있는 동안 녹음됩니다</div>
+        <div id="tracks" hidden></div>
+      </section>
+    </main>
+
+    <template id="sourceButtonTemplate">
+      <div class="source-slot">
+        <img class="source-base" src="./resource/source_base.svg" alt="" draggable="false" />
+        <svg class="running-gauge" viewBox="0 0 60 60" aria-hidden="true">
+          <circle class="gauge-track" cx="30" cy="30" r="28"></circle>
+          <circle class="gauge-progress" cx="30" cy="30" r="28" pathLength="100"></circle>
+        </svg>
+        <img class="source-button-art" src="./resource/source_normal_btn.svg" alt="" draggable="false" />
+        <img class="source-state-icon" src="./resource/icon_play.svg" alt="" draggable="false" />
+        <span class="source-volume-meter" aria-hidden="true"><span></span></span>
+        <img class="source-volume-art" src="./resource/source_volume_btn.svg" alt="" draggable="false" />
+        <span class="source-volume-value" aria-hidden="true">100</span>
+        <span class="source-title"></span>
+        <span class="source-time">00:00</span>
+        <button class="source-button" type="button" aria-label="소스 녹음"></button>
+        <button class="source-volume-button" type="button" aria-label="소스 볼륨"></button>
+        <button class="source-menu-button" type="button" aria-label="소스 메뉴"></button>
+        <div class="source-interval-control" aria-label="루프 간격">
+          <button class="source-interval-minus" type="button" aria-label="루프 간격 줄이기">-</button>
+          <span class="source-interval-value">1.00x</span>
+          <button class="source-interval-plus" type="button" aria-label="루프 간격 늘리기">+</button>
+        </div>
+      </div>
+    </template>
+
+    <template id="optionButtonTemplate">
+      <button class="option-toggle" type="button">
+        <img alt="" draggable="false" />
+        <span class="option-label"></span>
+        <span class="option-status"></span>
+      </button>
+    </template>
+
+    <template id="trackTemplate">
+      <article class="track-row">
+        <button class="mini-button mute" type="button">M</button>
+        <div class="track-copy">
+          <strong></strong>
+          <span></span>
+        </div>
+        <input class="gain" type="range" min="0" max="1.25" step="0.01" value="1" aria-label="소스 볼륨" />
+      </article>
+    </template>
+
+    <script src="./app.js?v=20260605-wave-off"></script>
+  </body>
+</html>
