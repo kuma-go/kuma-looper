@@ -53,6 +53,7 @@ input {
 
 .stage {
   --wave: 0;
+  --disk-rotation: 0deg;
   position: relative;
   width: min(calc(100vw - 20px), calc((100dvh - 20px) * 1.422222));
   aspect-ratio: 1024 / 720;
@@ -833,6 +834,11 @@ img {
   animation: kumaDiskSpin 3.4s linear infinite;
 }
 
+.stage.disk-ui-scratching .kuma-disk-art {
+  animation: none;
+  transform: rotate(var(--disk-rotation));
+}
+
 .stage.disk-ui-scratching .disk-art {
   cursor: grabbing;
   filter: drop-shadow(0 0 18px rgba(31, 233, 255, 0.75));
@@ -990,7 +996,7 @@ img {
 .piano-panel {
   left: 2.9297%;
   bottom: 0.6944%;
-  width: 87.3047%;
+  width: 94%;
   height: 19.4444%;
   padding: 0.95% 1.15% 1.1%;
   border: 1px solid rgba(102, 98, 137, 0.72);

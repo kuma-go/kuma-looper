@@ -38,6 +38,8 @@ const masterValue = document.querySelector("#masterValue");
 const mixRecBtn = document.querySelector("#mixRecBtn");
 const canvas = document.querySelector("#scope");
 const canvasCtx = canvas.getContext("2d");
+const diskArt = document.querySelector(".disk-art");
+const kumaDiskArt = document.querySelector(".kuma-disk-art");
 const diskReactor = document.querySelector(".disk-reactor");
 const progressBar = document.querySelector(".progress-bar");
 const stage = document.querySelector(".stage");
@@ -70,6 +72,7 @@ let loadingSlotIndex = null;
 let beatSlotIndex = null;
 let diskDrag = null;
 let diskHoldTimer = 0;
+let diskRotation = 0;
 let masterDrag = null;
 let masterVolume = 1;
 let pianoVolumeLevel = 1;
@@ -1261,6 +1264,31 @@ function toggleGroup(groupIndex) {
   updateProgressUi();
 }
 
+function getDiskPointerAngle(event) {
+  const rect = event.currentTarget.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  return Math.atan2(event.clientY - centerY, event.clientX - centerX) * (180 / Math.PI);
+}
+
+function getAngleDelta(from, to) {
+  return ((((to - from) % 360) + 540) % 360) - 180;
+}
+
+function getCurrentDiskVisualRotation() {
+  const transform = getComputedStyle(kumaDiskArt).transform;
+  if (!transform || transform === "none") return diskRotation;
+  const Matrix = window.DOMMatrixReadOnly || window.DOMMatrix || window.WebKitCSSMatrix;
+  if (!Matrix) return diskRotation;
+  const matrix = new Matrix(transform);
+  return Math.atan2(matrix.b, matrix.a) * (180 / Math.PI);
+}
+
+function setDiskRotation(nextRotation) {
+  diskRotation = nextRotation;
+  stage.style.setProperty("--disk-rotation", `${diskRotation.toFixed(2)}deg`);
+}
+
 function setScratchRate(rate) {
   if (!audioCtx) return;
   tracks.filter(Boolean).forEach((track) => {
@@ -1886,10 +1914,19 @@ masterMenu.addEventListener("click", (event) => {
 
   closeMasterMenu();
 });
-document.querySelector(".disk-art").addEventListener("pointerdown", (event) => {
+diskArt.addEventListener("pointerdown", (event) => {
   if (!optionStates[5]) return;
   event.preventDefault();
-  diskDrag = { startX: event.clientX, pointerId: event.pointerId };
+  const startAngle = getDiskPointerAngle(event);
+  const startRotation = getCurrentDiskVisualRotation();
+  setDiskRotation(startRotation);
+  diskDrag = {
+    startAngle,
+    lastAngle: startAngle,
+    lastMoveAt: performance.now(),
+    startRotation,
+    pointerId: event.pointerId
+  };
   stage.classList.add("disk-ui-scratching");
   setScratchRate(0.001);
   diskReactor.style.setProperty("--pulse", "0.86");
@@ -1897,26 +1934,37 @@ document.querySelector(".disk-art").addEventListener("pointerdown", (event) => {
   scheduleDiskHoldPause();
   event.currentTarget.setPointerCapture(event.pointerId);
 });
-document.querySelector(".disk-art").addEventListener("pointermove", (event) => {
+diskArt.addEventListener("pointermove", (event) => {
   if (!diskDrag || diskDrag.pointerId !== event.pointerId) return;
   clearTimeout(diskHoldTimer);
-  const dx = event.clientX - diskDrag.startX;
-  const rate = Math.max(0.18, Math.min(1.85, 1 + dx / 110));
+  const now = performance.now();
+  const angle = getDiskPointerAngle(event);
+  const totalDelta = getAngleDelta(diskDrag.startAngle, angle);
+  const stepDelta = getAngleDelta(diskDrag.lastAngle, angle);
+  const elapsed = Math.max(16, now - diskDrag.lastMoveAt);
+  setDiskRotation(diskDrag.startRotation + totalDelta);
+  const velocity = stepDelta / elapsed;
+  const rate = Math.max(0.18, Math.min(1.85, 1 + velocity * 22));
   setScratchRate(rate);
-  diskReactor.style.setProperty("--pulse", Math.min(1, Math.abs(dx) / 80 + 0.22).toFixed(3));
+  diskReactor.style.setProperty(
+    "--pulse",
+    Math.min(1, Math.abs(stepDelta) / 16 + 0.22).toFixed(3)
+  );
+  diskDrag.lastAngle = angle;
+  diskDrag.lastMoveAt = now;
   scheduleDiskHoldPause();
 });
-document.querySelector(".disk-art").addEventListener("pointerup", () => {
+diskArt.addEventListener("pointerup", () => {
   diskDrag = null;
   resetScratchRate();
   setStatus("Disk UI on");
 });
-document.querySelector(".disk-art").addEventListener("pointercancel", () => {
+diskArt.addEventListener("pointercancel", () => {
   diskDrag = null;
   resetScratchRate();
   setStatus("Disk UI on");
 });
-document.querySelector(".disk-art").addEventListener("dblclick", reverseAllLoops);
+diskArt.addEventListener("dblclick", reverseAllLoops);
 groupPanels.forEach((button, index) => {
   button.addEventListener("click", () => toggleGroup(index));
 });
