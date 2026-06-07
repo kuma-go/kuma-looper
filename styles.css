@@ -1537,17 +1537,17 @@ img {
   }
 
   .disk-fx-art {
-    left: 5%;
+    left: 12%;
     top: 18%;
-    width: 69%;
+    width: 52%;
   }
 
   .disk-art,
   .kuma-disk-art,
   .disk-reactor {
-    left: 10%;
-    top: 24%;
-    width: 59%;
+    left: 15%;
+    top: 22%;
+    width: 46%;
   }
 
   .icon-button.play {
