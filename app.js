@@ -176,7 +176,9 @@ function updateRecProgress() {
 
   const elapsed = (Date.now() - mixStartedAt) / 1000;
   const cycleProgress = (elapsed % 60) / 60;
-  progressBar.style.width = `${Math.max(0.8, cycleProgress * 87.8906)}%`;
+  const progressSpan =
+    Number(getComputedStyle(stage).getPropertyValue("--rec-progress-span")) || 87.8906;
+  progressBar.style.width = `${Math.max(0.8, cycleProgress * progressSpan)}%`;
   stage.classList.add("mix-recording");
 }
 
