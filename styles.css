@@ -1328,7 +1328,7 @@ img {
   }
 
   .option-toggle {
-    width: min(16.5%, 148px);
+    width: clamp(62px, 16.5%, 148px);
     height: auto;
     aspect-ratio: 1;
   }
@@ -1371,13 +1371,13 @@ img {
 
   .option-label {
     top: 46%;
-    font-size: clamp(7px, 1.9cqi, 12px);
+    font-size: clamp(8px, 1.9cqi, 12px);
   }
 
   .option-status {
     top: 64%;
     bottom: auto;
-    font-size: clamp(10px, 2.55cqi, 16px);
+    font-size: clamp(11px, 2.55cqi, 16px);
   }
 
   .option-toggle[aria-pressed="true"] .option-label {
