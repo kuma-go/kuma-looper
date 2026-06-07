@@ -1370,22 +1370,22 @@ img {
   }
 
   .option-label {
-    top: 46%;
+    top: 17%;
     font-size: clamp(8px, 1.9cqi, 12px);
   }
 
   .option-status {
-    top: 64%;
+    top: 51%;
     bottom: auto;
     font-size: clamp(11px, 2.55cqi, 16px);
   }
 
   .option-toggle[aria-pressed="true"] .option-label {
-    top: 52%;
+    top: 38%;
   }
 
   .option-toggle[aria-pressed="true"] .option-status {
-    top: 70%;
+    top: 66%;
     bottom: auto;
   }
 
