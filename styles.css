@@ -1309,8 +1309,8 @@ img {
 
   .stage {
     --rec-progress-span: 92;
-    --master-track-top: 43;
-    --master-track-height: 48;
+    --master-track-top: 33;
+    --master-track-height: 58;
     width: calc(100vw - 12px);
     height: calc(100dvh - 12px);
     max-width: none;
@@ -1321,14 +1321,14 @@ img {
 
   .option-grid {
     inset: auto;
-    left: 4%;
-    top: 1%;
-    width: 92%;
-    height: 24%;
+    left: 2.5%;
+    top: 1.2%;
+    width: 95%;
+    height: 22.5%;
   }
 
   .option-toggle {
-    width: 19%;
+    width: min(16.5%, 148px);
     height: auto;
     aspect-ratio: 1;
   }
@@ -1348,33 +1348,45 @@ img {
 
   .option-toggle:nth-child(2),
   .option-toggle:nth-child(6) {
-    left: 27.3%;
+    left: 28.5%;
   }
 
   .option-toggle:nth-child(3),
   .option-toggle:nth-child(7) {
-    left: 53.6%;
+    left: 55.5%;
   }
 
   .option-toggle:nth-child(4),
   .option-toggle:nth-child(8) {
-    left: 79.9%;
+    left: 82%;
   }
 
   .option-toggle:nth-child(-n + 4) {
-    top: 0;
+    top: 1%;
   }
 
   .option-toggle:nth-child(n + 5) {
-    top: 50%;
+    top: 52%;
   }
 
   .option-label {
-    font-size: clamp(7px, 2.25cqi, 12px);
+    top: 46%;
+    font-size: clamp(7px, 1.9cqi, 12px);
   }
 
   .option-status {
-    font-size: clamp(9px, 3cqi, 16px);
+    top: 64%;
+    bottom: auto;
+    font-size: clamp(10px, 2.55cqi, 16px);
+  }
+
+  .option-toggle[aria-pressed="true"] .option-label {
+    top: 52%;
+  }
+
+  .option-toggle[aria-pressed="true"] .option-status {
+    top: 70%;
+    bottom: auto;
   }
 
   .progress-track,
@@ -1531,7 +1543,7 @@ img {
     inset: auto;
     left: 0;
     top: 50%;
-    width: min(48%, 92cqh);
+    width: min(47%, 92cqh);
     height: auto;
     aspect-ratio: 1;
     transform: translateY(-50%);
@@ -1539,9 +1551,9 @@ img {
 
   .performance-controls {
     inset: auto;
-    left: 52%;
+    left: 58%;
     top: 0;
-    width: 48%;
+    width: 40%;
     height: 100%;
   }
 
@@ -1560,7 +1572,7 @@ img {
   }
 
   .rec-button {
-    left: 34%;
+    left: 35%;
     top: 38%;
     width: 30%;
     height: auto;
@@ -1568,7 +1580,7 @@ img {
   }
 
   .icon-button.clear {
-    left: 72%;
+    left: 73%;
     top: 41%;
     width: 23%;
     height: auto;
@@ -1576,9 +1588,9 @@ img {
   }
 
   .master-menu {
-    left: 26%;
+    left: 6%;
     top: 70%;
-    width: 70%;
+    width: 94%;
     padding: 3%;
   }
 
@@ -1617,21 +1629,21 @@ img {
 
   .master-track,
   .master-bar {
-    left: 12%;
-    top: 43%;
-    width: 2.5%;
-    height: 48%;
+    left: 49%;
+    top: 33%;
+    width: 1.4%;
+    height: 58%;
   }
 
   .master-btn {
-    left: 3%;
-    width: 21%;
+    left: 45.5%;
+    width: clamp(30px, 8.5%, 54px);
   }
 
   .master-value {
-    left: 0;
-    top: 34%;
-    width: 28%;
+    left: 43.6%;
+    top: 24%;
+    width: 12%;
     font-size: clamp(8px, 2.4cqi, 12px);
   }
 
@@ -1709,7 +1721,7 @@ img {
 
 @media (pointer: coarse) and (max-aspect-ratio: 4 / 5) {
   .master-btn {
-    width: 21%;
+    width: clamp(30px, 8.5%, 54px);
     margin-left: 0;
   }
 }

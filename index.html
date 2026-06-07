@@ -11,7 +11,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./resource/app-icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./resource/app-icon-192.png" />
-    <link rel="stylesheet" href="./styles.css?v=20260607-performance-columns" />
+    <link rel="stylesheet" href="./styles.css?v=20260607-toggle-master-fit" />
   </head>
   <body>
     <main class="app-shell">
@@ -58,13 +58,13 @@
             </button>
           </div>
 
+          <img class="master-track" src="./resource/mastervolume_track.svg" alt="" draggable="false" />
+          <img class="master-bar" src="./resource/mastervolume_bar.svg" alt="" draggable="false" />
+          <img class="master-btn" src="./resource/master_volume_btn.svg" alt="" draggable="false" />
+          <span class="master-value" id="masterValue">100</span>
+
           <div class="performance-controls">
             <img class="display-art" src="./resource/display.svg" alt="" draggable="false" />
-            <img class="master-track" src="./resource/mastervolume_track.svg" alt="" draggable="false" />
-            <img class="master-bar" src="./resource/mastervolume_bar.svg" alt="" draggable="false" />
-            <img class="master-btn" src="./resource/master_volume_btn.svg" alt="" draggable="false" />
-            <span class="master-value" id="masterValue">100</span>
-
             <button class="hotspot rec-button" id="mixRecBtn" type="button" aria-label="믹스 녹음">
               <img src="./resource/Rec_btn.svg" alt="" draggable="false" />
             </button>
@@ -150,6 +150,6 @@
       </article>
     </template>
 
-    <script src="./app.js?v=20260607-performance-columns"></script>
+    <script src="./app.js?v=20260607-toggle-master-fit"></script>
   </body>
 </html>
