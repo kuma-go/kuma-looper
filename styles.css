@@ -1571,7 +1571,10 @@ img {
   .disk-fx-art {
     left: 13%;
     top: 18%;
-    width: clamp(150px, 36%, 380px);
+    width: auto;
+    height: 82%;
+    aspect-ratio: 1;
+    object-fit: contain;
   }
 
   .disk-art,
@@ -1579,7 +1582,9 @@ img {
   .disk-reactor {
     left: 16%;
     top: 20%;
-    width: clamp(130px, 30%, 330px);
+    width: auto;
+    height: 68%;
+    aspect-ratio: 1;
   }
 
   .icon-button.play {
