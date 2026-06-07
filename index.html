@@ -11,7 +11,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./resource/app-icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./resource/app-icon-192.png" />
-    <link rel="stylesheet" href="./styles.css?v=20260607-portrait-fluid-disk" />
+    <link rel="stylesheet" href="./styles.css?v=20260607-performance-columns" />
   </head>
   <body>
     <main class="app-shell">
@@ -48,34 +48,39 @@
         <input id="sourceFileInput" type="file" accept="audio/*,.webm,.wav,.mp3,.m4a,.ogg" hidden />
 
         <section class="performance-module" aria-label="믹스 및 디스크 모듈">
-          <img class="display-art" src="./resource/display.svg" alt="" draggable="false" />
-          <img class="disk-fx-art" src="./resource/disk_fx.svg" alt="" draggable="false" />
-          <img class="disk-art" src="./resource/disk.svg" alt="" draggable="false" />
-          <img class="kuma-disk-art" src="./resource/kuma_disk.svg" alt="" draggable="false" />
-          <div class="disk-reactor" aria-hidden="true"></div>
-          <img class="master-track" src="./resource/mastervolume_track.svg" alt="" draggable="false" />
-          <img class="master-bar" src="./resource/mastervolume_bar.svg" alt="" draggable="false" />
-          <img class="master-btn" src="./resource/master_volume_btn.svg" alt="" draggable="false" />
-          <span class="master-value" id="masterValue">100</span>
-
-          <button class="hotspot rec-button" id="mixRecBtn" type="button" aria-label="믹스 녹음">
-            <img src="./resource/Rec_btn.svg" alt="" draggable="false" />
-          </button>
-          <button class="hotspot icon-button play" id="playPauseBtn" type="button" aria-label="재생 또는 일시정지">
-            <img id="playPauseIcon" src="./resource/icon_temporarystop.svg" alt="" draggable="false" />
-          </button>
-          <button class="hotspot icon-button clear" id="clearBtn" type="button" aria-label="전체 메뉴">
-            <img src="./resource/menu_btn.svg" alt="" draggable="false" />
-          </button>
-          <div class="master-menu" id="masterMenu" hidden>
-            <button type="button" data-action="clear-all">전체 초기화</button>
-            <button type="button" data-action="toggle-playback">전체 멈춤</button>
+          <div class="disk-deck">
+            <img class="disk-fx-art" src="./resource/disk_fx.svg" alt="" draggable="false" />
+            <img class="disk-art" src="./resource/disk.svg" alt="" draggable="false" />
+            <img class="kuma-disk-art" src="./resource/kuma_disk.svg" alt="" draggable="false" />
+            <div class="disk-reactor" aria-hidden="true"></div>
+            <button class="hotspot icon-button play" id="playPauseBtn" type="button" aria-label="재생 또는 일시정지">
+              <img id="playPauseIcon" src="./resource/icon_temporarystop.svg" alt="" draggable="false" />
+            </button>
           </div>
 
-          <div class="live-display" aria-label="믹스 상태">
-            <canvas id="scope" width="340" height="70" aria-hidden="true"></canvas>
-            <strong id="loopCount">0 loops</strong>
-            <span id="mixTimer">00:00</span>
+          <div class="performance-controls">
+            <img class="display-art" src="./resource/display.svg" alt="" draggable="false" />
+            <img class="master-track" src="./resource/mastervolume_track.svg" alt="" draggable="false" />
+            <img class="master-bar" src="./resource/mastervolume_bar.svg" alt="" draggable="false" />
+            <img class="master-btn" src="./resource/master_volume_btn.svg" alt="" draggable="false" />
+            <span class="master-value" id="masterValue">100</span>
+
+            <button class="hotspot rec-button" id="mixRecBtn" type="button" aria-label="믹스 녹음">
+              <img src="./resource/Rec_btn.svg" alt="" draggable="false" />
+            </button>
+            <button class="hotspot icon-button clear" id="clearBtn" type="button" aria-label="전체 메뉴">
+              <img src="./resource/menu_btn.svg" alt="" draggable="false" />
+            </button>
+            <div class="master-menu" id="masterMenu" hidden>
+              <button type="button" data-action="clear-all">전체 초기화</button>
+              <button type="button" data-action="toggle-playback">전체 멈춤</button>
+            </div>
+
+            <div class="live-display" aria-label="믹스 상태">
+              <canvas id="scope" width="340" height="70" aria-hidden="true"></canvas>
+              <strong id="loopCount">0 loops</strong>
+              <span id="mixTimer">00:00</span>
+            </div>
           </div>
         </section>
 
@@ -145,6 +150,6 @@
       </article>
     </template>
 
-    <script src="./app.js?v=20260607-portrait-fluid-disk"></script>
+    <script src="./app.js?v=20260607-performance-columns"></script>
   </body>
 </html>
