@@ -54,7 +54,10 @@ input {
 .stage {
   --wave: 0;
   --disk-rotation: 0deg;
+  --master-track-top: 54.8611;
+  --master-track-height: 27.7778;
   position: relative;
+  container-type: inline-size;
   width: min(calc(100vw - 20px), calc((100dvh - 20px) * 1.422222));
   aspect-ratio: 1024 / 720;
   max-width: 1024px;
@@ -114,6 +117,9 @@ img {
 
 .progress-track,
 .progress-bar,
+.option-grid,
+.source-module,
+.performance-module,
 .display-art,
 .disk-fx-art,
 .disk-art,
@@ -133,6 +139,12 @@ img {
 .source-popup,
 .master-menu {
   position: absolute;
+}
+
+.option-grid,
+.source-module,
+.performance-module {
+  inset: 0;
 }
 
 .progress-track,
@@ -1281,6 +1293,314 @@ img {
 
   38% {
     filter: blur(calc(2px + var(--pulse) * 7px));
+  }
+}
+
+@media (max-aspect-ratio: 4 / 5) {
+  .app-shell {
+    padding: max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right))
+      max(6px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
+  }
+
+  .stage {
+    --master-track-top: 29;
+    --master-track-height: 58;
+    width: min(calc(100vw - 12px), calc((100dvh - 12px) * 0.5625));
+    max-width: 720px;
+    max-height: calc(100dvh - 12px);
+    aspect-ratio: 9 / 16;
+    border-radius: 8px;
+  }
+
+  .option-grid {
+    inset: auto;
+    left: 3%;
+    top: 1.3%;
+    width: 94%;
+    height: 15.8%;
+  }
+
+  .option-toggle {
+    width: 21%;
+    height: 46%;
+  }
+
+  .option-toggle:nth-child(1),
+  .option-toggle:nth-child(5) {
+    left: 1.5%;
+  }
+
+  .option-toggle:nth-child(2),
+  .option-toggle:nth-child(6) {
+    left: 26.5%;
+  }
+
+  .option-toggle:nth-child(3),
+  .option-toggle:nth-child(7) {
+    left: 51.5%;
+  }
+
+  .option-toggle:nth-child(4),
+  .option-toggle:nth-child(8) {
+    left: 76.5%;
+  }
+
+  .option-toggle:nth-child(-n + 4) {
+    top: 0;
+  }
+
+  .option-toggle:nth-child(n + 5) {
+    top: 52%;
+  }
+
+  .option-label {
+    font-size: clamp(7px, 2.25cqi, 12px);
+  }
+
+  .option-status {
+    font-size: clamp(9px, 3cqi, 16px);
+  }
+
+  .progress-track,
+  .progress-bar {
+    left: 4%;
+    top: 18.1%;
+    width: 92%;
+    height: 0.7%;
+  }
+
+  .progress-bar {
+    width: 0.8%;
+  }
+
+  .status-pill {
+    left: auto;
+    right: 4%;
+    top: 19.1%;
+    min-width: 20%;
+    font-size: clamp(7px, 2.35cqi, 12px);
+  }
+
+  .source-module {
+    inset: auto;
+    left: 2%;
+    top: 20.7%;
+    width: 96%;
+    height: 42.6%;
+  }
+
+  .group-panel {
+    left: 0;
+    width: 100%;
+    height: 31%;
+    border-width: 1px;
+    border-radius: 10px;
+  }
+
+  .group-panel img {
+    left: 1.4%;
+    top: 10%;
+    width: 17%;
+  }
+
+  .group-panel::after {
+    left: 1.4%;
+    top: 14.5%;
+    width: 17%;
+    font-size: clamp(6px, 1.9cqi, 10px);
+  }
+
+  .group-1 {
+    top: 0;
+  }
+
+  .group-2 {
+    top: 34.5%;
+  }
+
+  .group-3 {
+    top: 69%;
+  }
+
+  .source-slot {
+    width: 16.4%;
+    height: 27.5%;
+  }
+
+  .source-slot:nth-child(1),
+  .source-slot:nth-child(5),
+  .source-slot:nth-child(9) {
+    left: 21%;
+  }
+
+  .source-slot:nth-child(2),
+  .source-slot:nth-child(6),
+  .source-slot:nth-child(10) {
+    left: 40.1%;
+  }
+
+  .source-slot:nth-child(3),
+  .source-slot:nth-child(7),
+  .source-slot:nth-child(11) {
+    left: 59.2%;
+  }
+
+  .source-slot:nth-child(4),
+  .source-slot:nth-child(8),
+  .source-slot:nth-child(12) {
+    left: 78.3%;
+  }
+
+  .source-slot:nth-child(-n + 4) {
+    top: 1.5%;
+  }
+
+  .source-slot:nth-child(n + 5):nth-child(-n + 8) {
+    top: 36%;
+  }
+
+  .source-slot:nth-child(n + 9) {
+    top: 70.5%;
+  }
+
+  .source-title {
+    font-size: clamp(6px, 1.8cqi, 10px);
+  }
+
+  .source-volume-value,
+  .source-interval-value {
+    font-size: clamp(5px, 1.55cqi, 8px);
+  }
+
+  .source-interval-control button {
+    font-size: clamp(7px, 2.1cqi, 11px);
+  }
+
+  .source-popup {
+    width: min(38%, 180px);
+    min-width: 138px;
+  }
+
+  .source-popup button {
+    font-size: clamp(8px, 2.2cqi, 11px);
+  }
+
+  .performance-module {
+    inset: auto;
+    left: 2%;
+    top: 64%;
+    width: 96%;
+    height: 34%;
+  }
+
+  .display-art,
+  .live-display {
+    left: 2%;
+    top: 1%;
+    width: 63%;
+    height: 15%;
+  }
+
+  .display-art {
+    height: auto;
+  }
+
+  .live-display strong,
+  .live-display span {
+    font-size: clamp(7px, 2.15cqi, 11px);
+  }
+
+  .rec-button {
+    left: 79%;
+    top: 0;
+    width: 15%;
+    height: 15%;
+  }
+
+  .icon-button.clear {
+    left: 86%;
+    top: 20%;
+    width: 9%;
+    height: 9%;
+  }
+
+  .master-menu {
+    left: 58%;
+    top: 20%;
+    width: 36%;
+    padding: 1.4%;
+  }
+
+  .master-menu button {
+    min-height: 34px;
+    font-size: clamp(9px, 2.45cqi, 13px);
+  }
+
+  .disk-fx-art {
+    left: 5%;
+    top: 18%;
+    width: 69%;
+  }
+
+  .disk-art,
+  .kuma-disk-art,
+  .disk-reactor {
+    left: 10%;
+    top: 24%;
+    width: 59%;
+  }
+
+  .icon-button.play {
+    left: 34.8%;
+    top: 59%;
+    width: 9%;
+    height: 9%;
+  }
+
+  .master-track,
+  .master-bar {
+    left: 88%;
+    top: 29%;
+    width: 1.1%;
+    height: 58%;
+  }
+
+  .master-btn {
+    left: 84.5%;
+    width: 8%;
+  }
+
+  .master-value {
+    left: 82%;
+    top: 20%;
+    width: 13%;
+    font-size: clamp(8px, 2.4cqi, 12px);
+  }
+
+  .piano-panel {
+    left: 2%;
+    width: 96%;
+    height: 20%;
+    bottom: 0.8%;
+    padding: 1.5% 1.5% 1.8%;
+  }
+
+  .piano-strip {
+    font-size: clamp(7px, 2cqi, 11px);
+  }
+
+  .piano-key::after {
+    font-size: clamp(6px, 1.65cqi, 9px);
+  }
+
+  .piano-volume {
+    width: 5.5%;
+  }
+
+  .engraving {
+    right: 3%;
+    bottom: 1.1%;
+    font-size: clamp(6px, 1.7cqi, 9px);
   }
 }
 

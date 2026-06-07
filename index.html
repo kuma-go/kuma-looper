@@ -11,7 +11,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./resource/app-icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./resource/app-icon-192.png" />
-    <link rel="stylesheet" href="./styles.css?v=20260606-toggle-group-hit" />
+    <link rel="stylesheet" href="./styles.css?v=20260607-responsive-modules" />
   </head>
   <body>
     <main class="app-shell">
@@ -23,18 +23,20 @@
 
         <section class="option-grid" id="optionGrid" aria-label="옵션 토글"></section>
 
-        <section class="group-layer" aria-label="소스 그룹 정지">
-          <button class="group-panel group-1" type="button" data-group="0" aria-label="리듬소스그룹 그룹 정지">
-            <img src="./resource/group_btn.svg" alt="" draggable="false" />
-          </button>
-          <button class="group-panel group-2" type="button" data-group="1" aria-label="화음소스그룹 그룹 정지">
-            <img src="./resource/group_btn.svg" alt="" draggable="false" />
-          </button>
-          <button class="group-panel group-3" type="button" data-group="2" aria-label="릭소스그룹 그룹 정지">
-            <img src="./resource/group_btn.svg" alt="" draggable="false" />
-          </button>
+        <section class="source-module" aria-label="루프 소스 모듈">
+          <section class="group-layer" aria-label="소스 그룹 정지">
+            <button class="group-panel group-1" type="button" data-group="0" aria-label="리듬소스그룹 그룹 정지">
+              <img src="./resource/group_btn.svg" alt="" draggable="false" />
+            </button>
+            <button class="group-panel group-2" type="button" data-group="1" aria-label="화음소스그룹 그룹 정지">
+              <img src="./resource/group_btn.svg" alt="" draggable="false" />
+            </button>
+            <button class="group-panel group-3" type="button" data-group="2" aria-label="릭소스그룹 그룹 정지">
+              <img src="./resource/group_btn.svg" alt="" draggable="false" />
+            </button>
+          </section>
+          <section class="source-grid" id="sourceGrid" aria-label="소스 그룹"></section>
         </section>
-        <section class="source-grid" id="sourceGrid" aria-label="소스 그룹"></section>
         <div class="source-popup" id="sourcePopup" hidden>
           <button type="button" data-action="rename">소스이름변경</button>
           <button type="button" data-action="save">파일로저장</button>
@@ -45,35 +47,37 @@
         </div>
         <input id="sourceFileInput" type="file" accept="audio/*,.webm,.wav,.mp3,.m4a,.ogg" hidden />
 
-        <img class="display-art" src="./resource/display.svg" alt="" draggable="false" />
-        <img class="disk-fx-art" src="./resource/disk_fx.svg" alt="" draggable="false" />
-        <img class="disk-art" src="./resource/disk.svg" alt="" draggable="false" />
-        <img class="kuma-disk-art" src="./resource/kuma_disk.svg" alt="" draggable="false" />
-        <div class="disk-reactor" aria-hidden="true"></div>
-        <img class="master-track" src="./resource/mastervolume_track.svg" alt="" draggable="false" />
-        <img class="master-bar" src="./resource/mastervolume_bar.svg" alt="" draggable="false" />
-        <img class="master-btn" src="./resource/master_volume_btn.svg" alt="" draggable="false" />
-        <span class="master-value" id="masterValue">100</span>
+        <section class="performance-module" aria-label="믹스 및 디스크 모듈">
+          <img class="display-art" src="./resource/display.svg" alt="" draggable="false" />
+          <img class="disk-fx-art" src="./resource/disk_fx.svg" alt="" draggable="false" />
+          <img class="disk-art" src="./resource/disk.svg" alt="" draggable="false" />
+          <img class="kuma-disk-art" src="./resource/kuma_disk.svg" alt="" draggable="false" />
+          <div class="disk-reactor" aria-hidden="true"></div>
+          <img class="master-track" src="./resource/mastervolume_track.svg" alt="" draggable="false" />
+          <img class="master-bar" src="./resource/mastervolume_bar.svg" alt="" draggable="false" />
+          <img class="master-btn" src="./resource/master_volume_btn.svg" alt="" draggable="false" />
+          <span class="master-value" id="masterValue">100</span>
 
-        <button class="hotspot rec-button" id="mixRecBtn" type="button" aria-label="믹스 녹음">
-          <img src="./resource/Rec_btn.svg" alt="" draggable="false" />
-        </button>
-        <button class="hotspot icon-button play" id="playPauseBtn" type="button" aria-label="재생 또는 일시정지">
-          <img id="playPauseIcon" src="./resource/icon_temporarystop.svg" alt="" draggable="false" />
-        </button>
-        <button class="hotspot icon-button clear" id="clearBtn" type="button" aria-label="전체 메뉴">
-          <img src="./resource/menu_btn.svg" alt="" draggable="false" />
-        </button>
-        <div class="master-menu" id="masterMenu" hidden>
-          <button type="button" data-action="clear-all">전체 초기화</button>
-          <button type="button" data-action="toggle-playback">전체 멈춤</button>
-        </div>
+          <button class="hotspot rec-button" id="mixRecBtn" type="button" aria-label="믹스 녹음">
+            <img src="./resource/Rec_btn.svg" alt="" draggable="false" />
+          </button>
+          <button class="hotspot icon-button play" id="playPauseBtn" type="button" aria-label="재생 또는 일시정지">
+            <img id="playPauseIcon" src="./resource/icon_temporarystop.svg" alt="" draggable="false" />
+          </button>
+          <button class="hotspot icon-button clear" id="clearBtn" type="button" aria-label="전체 메뉴">
+            <img src="./resource/menu_btn.svg" alt="" draggable="false" />
+          </button>
+          <div class="master-menu" id="masterMenu" hidden>
+            <button type="button" data-action="clear-all">전체 초기화</button>
+            <button type="button" data-action="toggle-playback">전체 멈춤</button>
+          </div>
 
-        <div class="live-display" aria-label="믹스 상태">
-          <canvas id="scope" width="340" height="70" aria-hidden="true"></canvas>
-          <strong id="loopCount">0 loops</strong>
-          <span id="mixTimer">00:00</span>
-        </div>
+          <div class="live-display" aria-label="믹스 상태">
+            <canvas id="scope" width="340" height="70" aria-hidden="true"></canvas>
+            <strong id="loopCount">0 loops</strong>
+            <span id="mixTimer">00:00</span>
+          </div>
+        </section>
 
         <section class="piano-panel" id="pianoPanel" aria-label="피아노 건반" aria-hidden="true">
           <div class="piano-strip">
@@ -141,6 +145,6 @@
       </article>
     </template>
 
-    <script src="./app.js?v=20260606-toggle-group-hit"></script>
+    <script src="./app.js?v=20260607-responsive-modules"></script>
   </body>
 </html>

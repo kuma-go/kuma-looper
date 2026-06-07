@@ -1198,8 +1198,9 @@ function updateMasterVolume(nextVolume) {
   }
 
   const normalized = masterVolume / 1.25;
-  const trackTop = 54.8611;
-  const trackHeight = 27.7778;
+  const stageStyles = getComputedStyle(stage);
+  const trackTop = Number(stageStyles.getPropertyValue("--master-track-top")) || 54.8611;
+  const trackHeight = Number(stageStyles.getPropertyValue("--master-track-height")) || 27.7778;
   const fillTop = trackTop + (1 - normalized) * trackHeight;
   masterBar.style.top = `${trackTop}%`;
   masterBar.style.height = `${trackHeight}%`;
@@ -2069,4 +2070,15 @@ document.addEventListener("pointerdown", (event) => {
 });
 window.addEventListener("focus", () => {
   if (isPlaying && audioCtx) restartLoops();
+});
+
+let responsiveLayoutTimer = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(responsiveLayoutTimer);
+  responsiveLayoutTimer = setTimeout(() => {
+    updateMasterVolume(masterVolume);
+    updatePianoVolume(pianoVolumeLevel);
+    closeSourcePopup();
+    closeMasterMenu();
+  }, 120);
 });
