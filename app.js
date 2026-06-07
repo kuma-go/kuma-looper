@@ -19,7 +19,12 @@ const sourceGrid = document.querySelector("#sourceGrid");
 const groupPanels = document.querySelectorAll(".group-panel");
 const optionTemplate = document.querySelector("#optionButtonTemplate");
 const sourceTemplate = document.querySelector("#sourceButtonTemplate");
+const sourceDim = document.querySelector("#sourceDim");
 const sourcePopup = document.querySelector("#sourcePopup");
+const sourcePopupTitle = document.querySelector("#sourcePopupTitle");
+const sourcePopupVolume = document.querySelector("#sourcePopupVolume");
+const sourcePopupInterval = document.querySelector("#sourcePopupInterval");
+const sourcePopupVolumeMeter = document.querySelector("#sourcePopupVolumeMeter");
 const sourceFileInput = document.querySelector("#sourceFileInput");
 const trackTemplate = document.querySelector("#trackTemplate");
 const tracksEl = document.querySelector("#tracks");
@@ -87,6 +92,11 @@ const volumeDrag = {
   startY: 0,
   startGain: 1,
   maxOffset: 18
+};
+const sourceLongPress = {
+  timer: 0,
+  index: null,
+  opened: false
 };
 const optionStates = [false, false, false, false, false, false, false, false];
 const optionIndexByKey = Object.fromEntries(optionKeys.map((key, index) => [key, index]));
@@ -722,6 +732,9 @@ function changeSourceInterval(slotIndex, delta) {
   if (next === sourceIntervals[slotIndex]) return;
   sourceIntervals[slotIndex] = next;
   applyTrackInterval(slotIndex);
+  if (!sourcePopup.hidden && sourcePopup.dataset.slot === String(slotIndex)) {
+    updateSourcePopupControls(slotIndex);
+  }
   setStatus(`Loop ${next.toFixed(2)}x`);
 }
 
@@ -1097,7 +1110,11 @@ function stopPadRecording(button) {
 
 function closeSourcePopup() {
   sourcePopup.hidden = true;
+  sourceDim.hidden = true;
   sourcePopup.dataset.slot = "";
+  sourceGrid.querySelectorAll(".source-slot.popup-focused").forEach((slot) => {
+    slot.classList.remove("popup-focused");
+  });
 }
 
 function openSourcePopup(slot, slotIndex) {
@@ -1108,13 +1125,56 @@ function openSourcePopup(slot, slotIndex) {
 
   const rect = slot.getBoundingClientRect();
   const stageRect = document.querySelector(".stage").getBoundingClientRect();
-  const x = ((rect.right - stageRect.left) / stageRect.width) * 100;
-  const y = ((rect.top - stageRect.top) / stageRect.height) * 100;
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  const x = Math.max(24, Math.min(76, ((centerX - stageRect.left) / stageRect.width) * 100));
+  const y = Math.max(28, Math.min(62, ((centerY - stageRect.top) / stageRect.height) * 100 - 12));
 
   sourcePopup.style.left = `${x}%`;
   sourcePopup.style.top = `${y}%`;
   sourcePopup.dataset.slot = String(slotIndex);
+  sourceGrid.querySelectorAll(".source-slot.popup-focused").forEach((sourceSlot) => {
+    sourceSlot.classList.remove("popup-focused");
+  });
+  slot.classList.add("popup-focused");
+  updateSourcePopupControls(slotIndex);
+  sourceDim.hidden = false;
   sourcePopup.hidden = false;
+}
+
+function clearSourceLongPress() {
+  clearTimeout(sourceLongPress.timer);
+  sourceLongPress.timer = 0;
+  sourceLongPress.index = null;
+  sourceLongPress.opened = false;
+}
+
+function scheduleSourceLongPress(slot, slotIndex) {
+  clearSourceLongPress();
+  sourceLongPress.index = slotIndex;
+  sourceLongPress.opened = false;
+  sourceLongPress.timer = setTimeout(() => {
+    if (sourceLongPress.index !== slotIndex || !tracks[slotIndex]) return;
+    sourceLongPress.opened = true;
+    openSourcePopup(slot, slotIndex);
+    if (navigator.vibrate) navigator.vibrate(10);
+  }, 520);
+}
+
+function updateSourcePopupControls(slotIndex) {
+  const track = tracks[slotIndex];
+  const volume = track ? track.volume ?? track.gainNode.gain.value : 0;
+  const volumePercent = track ? Math.round(volume * 100) : 0;
+  const normalized = Math.round((volume / 1.25) * 100);
+  const title = track?.name || sourceNames[slotIndex] || `G${Math.floor(slotIndex / 4) + 1}-${(slotIndex % 4) + 1}`;
+  sourcePopupTitle.textContent = title;
+  sourcePopupVolume.textContent = track ? String(volumePercent) : "--";
+  sourcePopupInterval.textContent = `${sourceIntervals[slotIndex].toFixed(2)}x`;
+  sourcePopup.style.setProperty("--popup-volume-level", `${Math.max(0, Math.min(100, normalized))}%`);
+  if (sourcePopupVolumeMeter) sourcePopupVolumeMeter.style.width = `${Math.max(0, Math.min(100, normalized))}%`;
+  sourcePopup.querySelectorAll('[data-adjust^="volume"]').forEach((button) => {
+    button.disabled = !track;
+  });
 }
 
 function clearTrackAt(slotIndex) {
@@ -1191,6 +1251,9 @@ function setTrackVolume(slotIndex, nextGain) {
   track.gainNode.gain.value = track.muted ? 0 : gain;
   track.volume = gain;
   updateVolumeVisual(slotIndex, gain);
+  if (!sourcePopup.hidden && sourcePopup.dataset.slot === String(slotIndex)) {
+    updateSourcePopupControls(slotIndex);
+  }
 }
 
 function updateMasterVolume(nextVolume) {
@@ -1376,6 +1439,7 @@ function createSourceButtons() {
       event.preventDefault();
       closeSourcePopup();
       if (tracks[index]) {
+        scheduleSourceLongPress(slot, index);
         recordButton.setPointerCapture(event.pointerId);
         return;
       }
@@ -1387,6 +1451,9 @@ function createSourceButtons() {
     recordButton.addEventListener("pointerup", (event) => {
       event.preventDefault();
       if (tracks[index]) {
+        const openedByLongPress = sourceLongPress.index === index && sourceLongPress.opened;
+        clearSourceLongPress();
+        if (openedByLongPress) return;
         toggleSourcePlayback(index);
         return;
       }
@@ -1395,6 +1462,7 @@ function createSourceButtons() {
     });
 
     recordButton.addEventListener("pointercancel", () => {
+      clearSourceLongPress();
       pressedButtons.delete(slot);
       stopPadRecording(slot);
     });
@@ -1985,11 +2053,33 @@ groupPanels.forEach((button, index) => {
   button.addEventListener("click", () => toggleGroup(index));
 });
 sourcePopup.addEventListener("click", (event) => {
-  const action = event.target.closest("button")?.dataset.action;
-  if (!action) return;
-
   const slotIndex = Number(sourcePopup.dataset.slot);
   const track = tracks[slotIndex];
+  const button = event.target.closest("button");
+  const adjustment = button?.dataset.adjust;
+  const action = button?.dataset.action;
+
+  if (adjustment === "volume-down") {
+    if (track) setTrackVolume(slotIndex, (track.volume ?? track.gainNode.gain.value) - 0.1);
+    return;
+  }
+
+  if (adjustment === "volume-up") {
+    if (track) setTrackVolume(slotIndex, (track.volume ?? track.gainNode.gain.value) + 0.1);
+    return;
+  }
+
+  if (adjustment === "interval-down") {
+    changeSourceInterval(slotIndex, -0.25);
+    return;
+  }
+
+  if (adjustment === "interval-up") {
+    changeSourceInterval(slotIndex, 0.25);
+    return;
+  }
+
+  if (!action) return;
 
   if (action === "rename") {
     const nextName = prompt("소스 이름", track?.name || sourceNames[slotIndex]);

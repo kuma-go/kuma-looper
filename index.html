@@ -11,7 +11,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./resource/app-icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./resource/app-icon-192.png" />
-    <link rel="stylesheet" href="./styles.css?v=20260607-toggle-text-seat" />
+    <link rel="stylesheet" href="./styles.css?v=20260607-source-focus-popup" />
   </head>
   <body>
     <main class="app-shell">
@@ -37,13 +37,32 @@
           </section>
           <section class="source-grid" id="sourceGrid" aria-label="소스 그룹"></section>
         </section>
+        <div class="source-dim" id="sourceDim" hidden></div>
         <div class="source-popup" id="sourcePopup" hidden>
-          <button type="button" data-action="rename">소스이름변경</button>
-          <button type="button" data-action="save">파일로저장</button>
-          <button type="button" data-action="load">소스불러오기</button>
-          <button type="button" data-action="copy">소스복제</button>
-          <button type="button" data-action="paste">붙여넣기</button>
-          <button type="button" data-action="clear">선택소스삭제</button>
+          <strong class="source-popup-title" id="sourcePopupTitle">G1-1</strong>
+          <div class="source-popup-controls" aria-label="소스 빠른 조절">
+            <div class="source-popup-control">
+              <span>볼륨</span>
+              <button type="button" data-adjust="volume-down" aria-label="볼륨 줄이기">-</button>
+              <strong id="sourcePopupVolume">100</strong>
+              <button type="button" data-adjust="volume-up" aria-label="볼륨 올리기">+</button>
+              <i class="source-popup-meter" aria-hidden="true"><i id="sourcePopupVolumeMeter"></i></i>
+            </div>
+            <div class="source-popup-control">
+              <span>타이밍</span>
+              <button type="button" data-adjust="interval-down" aria-label="루프 간격 줄이기">-</button>
+              <strong id="sourcePopupInterval">1.00x</strong>
+              <button type="button" data-adjust="interval-up" aria-label="루프 간격 늘리기">+</button>
+            </div>
+          </div>
+          <div class="source-popup-menu">
+            <button type="button" data-action="rename">소스이름변경</button>
+            <button type="button" data-action="save">파일로저장</button>
+            <button type="button" data-action="load">소스불러오기</button>
+            <button type="button" data-action="copy">소스복제</button>
+            <button type="button" data-action="paste">붙여넣기</button>
+            <button type="button" data-action="clear">선택소스삭제</button>
+          </div>
         </div>
         <input id="sourceFileInput" type="file" accept="audio/*,.webm,.wav,.mp3,.m4a,.ogg" hidden />
 
@@ -150,6 +169,6 @@
       </article>
     </template>
 
-    <script src="./app.js?v=20260607-toggle-text-seat"></script>
+    <script src="./app.js?v=20260607-source-focus-popup"></script>
   </body>
 </html>
