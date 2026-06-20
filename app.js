@@ -54,6 +54,13 @@ const pianoVolume = document.querySelector("#pianoVolume");
 const pianoVolumeTrack = document.querySelector("#pianoVolumeTrack");
 const pianoVolumeValue = document.querySelector("#pianoVolumeValue");
 const AudioEngine = window.AudioContext || window.webkitAudioContext;
+const recorderMimeTypes = [
+  "audio/webm;codecs=opus",
+  "audio/webm",
+  "audio/mp4;codecs=mp4a.40.2",
+  "audio/mp4",
+  "audio/aac"
+];
 
 let audioCtx;
 let inputStream;
@@ -207,15 +214,42 @@ async function ensureAudio() {
     throw new Error("Microphone option is off.");
   }
 
-  if (!inputStream) {
-    inputStream = await navigator.mediaDevices.getUserMedia({
+  if (!hasLiveAudioInput(inputStream)) {
+    inputStream?.getTracks().forEach((track) => track.stop());
+    inputStream = await requestMicrophoneStream();
+    setStatus("Mic on");
+  }
+}
+
+async function requestMicrophoneStream() {
+  try {
+    return await navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: false,
         noiseSuppression: false,
         autoGainControl: false
       }
     });
-    setStatus("Mic on");
+  } catch (error) {
+    return navigator.mediaDevices.getUserMedia({ audio: true });
+  }
+}
+
+function hasLiveAudioInput(stream) {
+  return stream?.getAudioTracks().some((track) => track.readyState === "live" && track.enabled);
+}
+
+function getRecorderOptions() {
+  if (!window.MediaRecorder?.isTypeSupported) return {};
+  const mimeType = recorderMimeTypes.find((type) => MediaRecorder.isTypeSupported(type));
+  return mimeType ? { mimeType } : {};
+}
+
+function createCompatibleMediaRecorder(stream) {
+  try {
+    return new MediaRecorder(stream, getRecorderOptions());
+  } catch (error) {
+    return new MediaRecorder(stream);
   }
 }
 
@@ -822,7 +856,7 @@ async function startPadRecording(button, name, slotIndex) {
     const chunks = [];
     const startedAt = performance.now();
     const recorderInput = createProcessedRecorderStream();
-    const recorder = new MediaRecorder(recorderInput.stream);
+    const recorder = createCompatibleMediaRecorder(recorderInput.stream);
     mediaRecorder = recorder;
     activePad = {
       button,
@@ -855,60 +889,65 @@ async function startPadRecording(button, name, slotIndex) {
         return;
       }
 
-      const blob = new Blob(captured.chunks, { type: recorder.mimeType });
-      const arrayBuffer = await blob.arrayBuffer();
-      const decodedBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-      let originalBuffer = captured.bassShift ? makeBassPitchBuffer(decodedBuffer) : decodedBuffer;
-      if (captured.robotize) {
-        originalBuffer = makeRobotBuffer(originalBuffer);
-      }
-      const buffer = makeIntervalBuffer(originalBuffer, sourceIntervals[captured.slotIndex]);
-      const gainNode = audioCtx.createGain();
-      gainNode.gain.value = 1;
-
-      if (tracks[captured.slotIndex]) {
-        stopTrack(tracks[captured.slotIndex]);
-        tracks[captured.slotIndex].gainNode.disconnect();
-      }
-
-      const track = {
-        id: crypto.randomUUID ? crypto.randomUUID() : `track-${Date.now()}`,
-        name: captured.name,
-        slotIndex: captured.slotIndex,
-        buffer,
-        originalBuffer,
-        gainNode,
-        source: null,
-        muted: false,
-        originalBlob: blob,
-        isBassShifted: captured.bassShift,
-        isRobotized: captured.robotize,
-        isPlaying: true,
-        pausedAt: 0,
-        startedAt: 0,
-        volume: 1,
-        isDefaultBeat: false
-      };
-
-      connectTrack(track);
-      tracks[captured.slotIndex] = track;
-      setTrackVolume(captured.slotIndex, 1);
-      const hadLoop = loopDuration > 0;
-      refreshLoopDuration();
-      if (isPlaying) {
-        if (!hadLoop) {
-          pausedAt = 0;
-          playbackStartedAt = audioCtx.currentTime;
-        } else {
-          playbackStartedAt = audioCtx.currentTime - getLoopPosition();
+      try {
+        const blob = new Blob(captured.chunks, { type: recorder.mimeType });
+        const arrayBuffer = await blob.arrayBuffer();
+        const decodedBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        let originalBuffer = captured.bassShift ? makeBassPitchBuffer(decodedBuffer) : decodedBuffer;
+        if (captured.robotize) {
+          originalBuffer = makeRobotBuffer(originalBuffer);
         }
+        const buffer = makeIntervalBuffer(originalBuffer, sourceIntervals[captured.slotIndex]);
+        const gainNode = audioCtx.createGain();
+        gainNode.gain.value = 1;
+
+        if (tracks[captured.slotIndex]) {
+          stopTrack(tracks[captured.slotIndex]);
+          tracks[captured.slotIndex].gainNode.disconnect();
+        }
+
+        const track = {
+          id: crypto.randomUUID ? crypto.randomUUID() : `track-${Date.now()}`,
+          name: captured.name,
+          slotIndex: captured.slotIndex,
+          buffer,
+          originalBuffer,
+          gainNode,
+          source: null,
+          muted: false,
+          originalBlob: blob,
+          isBassShifted: captured.bassShift,
+          isRobotized: captured.robotize,
+          isPlaying: true,
+          pausedAt: 0,
+          startedAt: 0,
+          volume: 1,
+          isDefaultBeat: false
+        };
+
+        connectTrack(track);
+        tracks[captured.slotIndex] = track;
+        setTrackVolume(captured.slotIndex, 1);
+        const hadLoop = loopDuration > 0;
+        refreshLoopDuration();
+        if (isPlaying) {
+          if (!hadLoop) {
+            pausedAt = 0;
+            playbackStartedAt = audioCtx.currentTime;
+          } else {
+            playbackStartedAt = audioCtx.currentTime - getLoopPosition();
+          }
+        }
+        startTrack(track);
+        button.classList.add("has-loop");
+        updateSourceSlotState(captured.slotIndex);
+        renderTracks();
+        setStatus("Looping");
+        hint.textContent = "다른 소스를 겹쳐 화음을 만들 수 있습니다";
+      } catch (error) {
+        setStatus("Record failed", "error");
+        hint.textContent = "iPad에서 녹음 포맷을 처리하지 못했습니다. Safari를 업데이트하거나 효과 옵션을 끄고 다시 시도해 주세요";
       }
-      startTrack(track);
-      button.classList.add("has-loop");
-      updateSourceSlotState(captured.slotIndex);
-      renderTracks();
-      setStatus("Looping");
-      hint.textContent = "다른 소스를 겹쳐 화음을 만들 수 있습니다";
     });
 
     recorder.start();
@@ -1722,7 +1761,7 @@ async function toggleMixRecording() {
   }
 
   mixChunks = [];
-  mixRecorder = new MediaRecorder(mixDestination.stream);
+  mixRecorder = createCompatibleMediaRecorder(mixDestination.stream);
   mixRecorder.addEventListener("dataavailable", (event) => {
     if (event.data.size > 0) mixChunks.push(event.data);
   });
@@ -1737,7 +1776,7 @@ async function toggleMixRecording() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `kuma-looper-mix-${Date.now()}.webm`;
+    link.download = `kuma-looper-mix-${Date.now()}.${mixRecorder.mimeType.includes("mp4") ? "mp4" : "webm"}`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   });

@@ -153,6 +153,11 @@ img {
   inset: 0;
 }
 
+.option-grid {
+  z-index: 12;
+  pointer-events: none;
+}
+
 .progress-track,
 .progress-bar {
   left: 6.0547%;
@@ -175,6 +180,8 @@ img {
   width: 7.2266%;
   height: 13.0556%;
   padding: 0;
+  z-index: 1;
+  pointer-events: auto;
 }
 
 .option-toggle img {
