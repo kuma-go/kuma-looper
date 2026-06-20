@@ -1087,7 +1087,7 @@ img {
 .master-menu {
   left: 74.8%;
   top: 42.1%;
-  width: 14.8%;
+  width: 18.5%;
   padding: 0.55% 0.65%;
   border: 1px solid rgba(158, 152, 188, 0.34);
   border-radius: 8px;
@@ -1098,6 +1098,27 @@ img {
 
 .master-menu[hidden] {
   display: none;
+}
+
+.master-menu-section {
+  padding: 2px 0 6px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(158, 152, 188, 0.2);
+}
+
+.master-menu-label {
+  display: block;
+  margin: 0 0 5px 3px;
+  color: rgba(198, 193, 215, 0.78);
+  font-size: clamp(6px, 0.78vw, 9px);
+  font-weight: 850;
+  line-height: 1;
+}
+
+.mic-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
 }
 
 .master-menu button {
@@ -1111,6 +1132,22 @@ img {
   font-weight: 800;
   text-align: left;
   cursor: pointer;
+}
+
+.mic-mode-grid button {
+  min-height: clamp(21px, 3vw, 30px);
+  padding: 0;
+  border: 1px solid rgba(127, 124, 158, 0.36);
+  background: rgba(34, 35, 48, 0.72);
+  font-size: clamp(6px, 0.86vw, 10px);
+  text-align: center;
+}
+
+.mic-mode-grid button.active {
+  border-color: rgba(31, 233, 255, 0.76);
+  background: rgba(31, 233, 255, 0.16);
+  color: var(--cyan);
+  box-shadow: 0 0 10px rgba(31, 233, 255, 0.16);
 }
 
 .master-menu button:hover,

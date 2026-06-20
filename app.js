@@ -61,6 +61,8 @@ const recorderMimeTypes = [
   "audio/mp4",
   "audio/aac"
 ];
+const micModeStorageKey = "kuma-looper-mic-mode";
+const micModes = ["auto", "raw", "processed"];
 
 let audioCtx;
 let inputStream;
@@ -92,6 +94,7 @@ let masterVolume = 1;
 let pianoVolumeLevel = 1;
 let pianoVolumeDrag = null;
 let waveLevel = 0;
+let micMode = getSavedMicMode();
 const activePianoNotes = new Map();
 const sourceIntervals = Array(sourceNames.length).fill(1);
 const groupStopped = [false, false, false];
@@ -227,10 +230,11 @@ async function ensureAudio() {
 }
 
 async function requestMicrophoneStream() {
-  const mobileProcessing = shouldUseMobileMicProcessing();
+  const processingMode = getEffectiveMicMode();
+  const needsProcessing = processingMode === "processed";
   try {
     return await navigator.mediaDevices.getUserMedia({
-      audio: mobileProcessing
+      audio: needsProcessing
         ? {
             echoCancellation: true,
             noiseSuppression: true,
@@ -247,10 +251,28 @@ async function requestMicrophoneStream() {
   }
 }
 
+function getEffectiveMicMode() {
+  if (micMode === "auto") {
+    return shouldUseMobileMicProcessing() ? "processed" : "raw";
+  }
+  return micMode;
+}
+
 function shouldUseMobileMicProcessing() {
   const userAgent = navigator.userAgent || "";
   const platform = navigator.platform || "";
   return /iPad|iPhone|iPod|Android/i.test(userAgent) || (platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+function getMicNormalizeSettings() {
+  const effectiveMode = getEffectiveMicMode();
+  if (micMode === "processed") {
+    return { targetRms: 0.14, maxGain: 1.85 };
+  }
+  if (effectiveMode === "processed") {
+    return { targetRms: 0.11, maxGain: 1.55 };
+  }
+  return { targetRms: 0.1, maxGain: 1.25 };
 }
 
 function hasLiveAudioInput(stream) {
@@ -528,9 +550,9 @@ function normalizeRecordedBuffer(sourceBuffer) {
   const rms = sampleCount > 0 ? Math.sqrt(sumSquares / sampleCount) : 0;
   if (peak < 0.001 || rms < 0.0005) return sourceBuffer;
 
-  const targetRms = 0.11;
+  const { targetRms, maxGain } = getMicNormalizeSettings();
   const peakCeiling = 0.82;
-  const gain = Math.max(0.55, Math.min(1.55, targetRms / rms, peakCeiling / peak));
+  const gain = Math.max(0.55, Math.min(maxGain, targetRms / rms, peakCeiling / peak));
   if (Math.abs(gain - 1) < 0.04) return sourceBuffer;
 
   const normalizedBuffer = audioCtx.createBuffer(channelCount, sourceBuffer.length, sampleRate);
@@ -1424,6 +1446,58 @@ function updateMasterMenu() {
   if (playbackButton) {
     playbackButton.textContent = isPlaying ? "전체 멈춤" : "전체 재생";
   }
+  masterMenu.querySelectorAll("[data-mic-mode]").forEach((button) => {
+    const active = button.dataset.micMode === micMode;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+}
+
+async function setMicMode(nextMode) {
+  if (!micModes.includes(nextMode) || nextMode === micMode) return;
+  micMode = nextMode;
+  try {
+    localStorage.setItem(micModeStorageKey, micMode);
+  } catch {
+    // Storage may be unavailable in private browsing.
+  }
+  updateMasterMenu();
+
+  if (!inputStream || !isOptionOn("mic")) {
+    setStatus(`Mic ${getMicModeLabel()}`);
+    return;
+  }
+
+  try {
+    try {
+      micMeterSource?.disconnect();
+    } catch {
+      // Meter source may already be disconnected.
+    }
+    inputStream.getTracks().forEach((track) => track.stop());
+    inputStream = null;
+    micMeterSource = null;
+    await ensureAudio();
+    setStatus(`Mic ${getMicModeLabel()}`);
+  } catch (error) {
+    setStatus("Mic blocked", "error");
+    hint.textContent = "마이크 설정을 바꾼 뒤 권한을 다시 허용해야 할 수 있습니다";
+  }
+}
+
+function getMicModeLabel() {
+  if (micMode === "raw") return "raw";
+  if (micMode === "processed") return "boost";
+  return getEffectiveMicMode() === "processed" ? "auto+" : "auto";
+}
+
+function getSavedMicMode() {
+  try {
+    const savedMode = localStorage.getItem(micModeStorageKey);
+    return micModes.includes(savedMode) ? savedMode : "auto";
+  } catch {
+    return "auto";
+  }
 }
 
 function closeMasterMenu() {
@@ -2102,7 +2176,13 @@ document.addEventListener(
   { passive: false }
 );
 
-masterMenu.addEventListener("click", (event) => {
+masterMenu.addEventListener("click", async (event) => {
+  const micModeButton = event.target.closest("[data-mic-mode]");
+  if (micModeButton) {
+    await setMicMode(micModeButton.dataset.micMode);
+    return;
+  }
+
   const action = event.target.closest("button")?.dataset.action;
   if (!action) return;
 

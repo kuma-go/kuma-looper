@@ -11,7 +11,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./resource/app-icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./resource/app-icon-192.png" />
-    <link rel="stylesheet" href="./styles.css?v=20260607-source-focus-popup" />
+    <link rel="stylesheet" href="./styles.css?v=20260620-mic-settings" />
   </head>
   <body>
     <main class="app-shell">
@@ -91,6 +91,14 @@
               <img src="./resource/menu_btn.svg" alt="" draggable="false" />
             </button>
             <div class="master-menu" id="masterMenu" hidden>
+              <div class="master-menu-section">
+                <span class="master-menu-label">마이크 입력</span>
+                <div class="mic-mode-grid" role="group" aria-label="마이크 입력 모드">
+                  <button type="button" data-mic-mode="auto">자동</button>
+                  <button type="button" data-mic-mode="raw">원음</button>
+                  <button type="button" data-mic-mode="processed">보정</button>
+                </div>
+              </div>
               <button type="button" data-action="clear-all">전체 초기화</button>
               <button type="button" data-action="toggle-playback">전체 멈춤</button>
             </div>
@@ -169,6 +177,6 @@
       </article>
     </template>
 
-    <script src="./app.js?v=20260607-source-focus-popup"></script>
+    <script src="./app.js?v=20260620-mic-settings"></script>
   </body>
 </html>
