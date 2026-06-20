@@ -61,6 +61,7 @@ const recorderMimeTypes = [
   "audio/mp4",
   "audio/aac"
 ];
+const micRecordGain = 1.8;
 
 let audioCtx;
 let inputStream;
@@ -472,15 +473,25 @@ function makeRobotBuffer(sourceBuffer) {
 function createProcessedRecorderStream() {
   const echoOn = isOptionOn("echo");
   const bassOn = isOptionOn("bass");
-  if ((!echoOn && !bassOn) || !inputStream || !audioCtx) {
+  if (!inputStream || !audioCtx) {
     return { stream: inputStream, cleanup: () => {} };
   }
 
   const source = audioCtx.createMediaStreamSource(inputStream);
+  const preamp = audioCtx.createGain();
   const dry = audioCtx.createGain();
+  const limiter = audioCtx.createDynamicsCompressor();
   const destination = audioCtx.createMediaStreamDestination();
-  let mainOut = source;
-  const nodes = [source, dry];
+  let mainOut = preamp;
+  const nodes = [source, preamp, dry, limiter];
+
+  preamp.gain.value = micRecordGain;
+  limiter.threshold.value = -8;
+  limiter.knee.value = 12;
+  limiter.ratio.value = 8;
+  limiter.attack.value = 0.003;
+  limiter.release.value = 0.18;
+  source.connect(preamp);
 
   if (bassOn) {
     const lowShelf = audioCtx.createBiquadFilter();
@@ -505,7 +516,7 @@ function createProcessedRecorderStream() {
 
   dry.gain.value = echoOn ? 0.86 : 1;
   mainOut.connect(dry);
-  dry.connect(destination);
+  dry.connect(limiter);
 
   if (echoOn) {
     const delay = audioCtx.createDelay(1);
@@ -518,11 +529,13 @@ function createProcessedRecorderStream() {
 
     mainOut.connect(delay);
     delay.connect(wet);
-    wet.connect(destination);
+    wet.connect(limiter);
     delay.connect(feedback);
     feedback.connect(delay);
     nodes.push(delay, feedback, wet);
   }
+
+  limiter.connect(destination);
 
   const cleanup = () => {
     nodes.forEach((node) => {
