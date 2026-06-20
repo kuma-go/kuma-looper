@@ -66,6 +66,8 @@ let audioCtx;
 let inputStream;
 let mixDestination;
 let analyser;
+let micAnalyser;
+let micMeterSource;
 let masterGain;
 let pianoGain;
 let mediaRecorder;
@@ -217,22 +219,38 @@ async function ensureAudio() {
   if (!hasLiveAudioInput(inputStream)) {
     inputStream?.getTracks().forEach((track) => track.stop());
     inputStream = await requestMicrophoneStream();
+    connectMicMeter();
     setStatus("Mic on");
+  } else if (!micMeterSource) {
+    connectMicMeter();
   }
 }
 
 async function requestMicrophoneStream() {
+  const mobileProcessing = shouldUseMobileMicProcessing();
   try {
     return await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl: false
-      }
+      audio: mobileProcessing
+        ? {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        : {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          }
     });
   } catch (error) {
     return navigator.mediaDevices.getUserMedia({ audio: true });
   }
+}
+
+function shouldUseMobileMicProcessing() {
+  const userAgent = navigator.userAgent || "";
+  const platform = navigator.platform || "";
+  return /iPad|iPhone|iPod|Android/i.test(userAgent) || (platform === "MacIntel" && navigator.maxTouchPoints > 1);
 }
 
 function hasLiveAudioInput(stream) {
@@ -253,6 +271,17 @@ function createCompatibleMediaRecorder(stream) {
   }
 }
 
+function connectMicMeter() {
+  if (!audioCtx || !inputStream || !micAnalyser) return;
+  try {
+    micMeterSource?.disconnect();
+  } catch {
+    // Meter source may already be disconnected after a mic permission reset.
+  }
+  micMeterSource = audioCtx.createMediaStreamSource(inputStream);
+  micMeterSource.connect(micAnalyser);
+}
+
 async function ensureEngine(resume = true) {
   if (!AudioEngine) {
     throw new Error("Audio playback is not supported in this browser.");
@@ -262,10 +291,13 @@ async function ensureEngine(resume = true) {
     audioCtx = new AudioEngine();
     mixDestination = audioCtx.createMediaStreamDestination();
     analyser = audioCtx.createAnalyser();
+    micAnalyser = audioCtx.createAnalyser();
     masterGain = audioCtx.createGain();
     pianoGain = audioCtx.createGain();
     analyser.fftSize = 2048;
     analyser.smoothingTimeConstant = 0.78;
+    micAnalyser.fftSize = 2048;
+    micAnalyser.smoothingTimeConstant = 0.7;
     masterGain.gain.value = masterVolume;
     pianoGain.gain.value = pianoVolumeLevel;
     pianoGain.connect(masterGain);
@@ -282,6 +314,12 @@ async function ensureEngine(resume = true) {
 
 function stopMicInput() {
   if (!inputStream) return;
+  try {
+    micMeterSource?.disconnect();
+  } catch {
+    // Meter source may already be disconnected.
+  }
+  micMeterSource = null;
   inputStream.getTracks().forEach((track) => track.stop());
   inputStream = null;
   setStatus("Mic off");
@@ -1901,7 +1939,8 @@ function drawScope() {
     requestAnimationFrame(draw);
     updateProgressUi();
     updateRecProgress();
-    analyser.getByteTimeDomainData(data);
+    const scopeAnalyser = activePad && micAnalyser ? micAnalyser : analyser;
+    scopeAnalyser.getByteTimeDomainData(data);
     let sum = 0;
     canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
     canvasCtx.fillStyle = "#11130f";
