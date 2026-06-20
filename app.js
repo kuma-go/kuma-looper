@@ -61,7 +61,6 @@ const recorderMimeTypes = [
   "audio/mp4",
   "audio/aac"
 ];
-const micRecordGain = 1.8;
 
 let audioCtx;
 let inputStream;
@@ -470,28 +469,57 @@ function makeRobotBuffer(sourceBuffer) {
   return robotBuffer;
 }
 
+function normalizeRecordedBuffer(sourceBuffer) {
+  const channelCount = sourceBuffer.numberOfChannels;
+  const sampleRate = sourceBuffer.sampleRate;
+  let peak = 0;
+  let sumSquares = 0;
+  let sampleCount = 0;
+
+  for (let channel = 0; channel < channelCount; channel += 1) {
+    const sourceData = sourceBuffer.getChannelData(channel);
+    for (let index = 0; index < sourceData.length; index += 1) {
+      const sample = sourceData[index];
+      const absolute = Math.abs(sample);
+      if (absolute > peak) peak = absolute;
+      sumSquares += sample * sample;
+      sampleCount += 1;
+    }
+  }
+
+  const rms = sampleCount > 0 ? Math.sqrt(sumSquares / sampleCount) : 0;
+  if (peak < 0.001 || rms < 0.0005) return sourceBuffer;
+
+  const targetRms = 0.11;
+  const peakCeiling = 0.82;
+  const gain = Math.max(0.55, Math.min(1.55, targetRms / rms, peakCeiling / peak));
+  if (Math.abs(gain - 1) < 0.04) return sourceBuffer;
+
+  const normalizedBuffer = audioCtx.createBuffer(channelCount, sourceBuffer.length, sampleRate);
+  for (let channel = 0; channel < channelCount; channel += 1) {
+    const sourceData = sourceBuffer.getChannelData(channel);
+    const targetData = normalizedBuffer.getChannelData(channel);
+    for (let index = 0; index < sourceData.length; index += 1) {
+      const sample = sourceData[index] * gain;
+      targetData[index] = Math.max(-0.98, Math.min(0.98, sample));
+    }
+  }
+
+  return normalizedBuffer;
+}
+
 function createProcessedRecorderStream() {
   const echoOn = isOptionOn("echo");
   const bassOn = isOptionOn("bass");
-  if (!inputStream || !audioCtx) {
+  if ((!echoOn && !bassOn) || !inputStream || !audioCtx) {
     return { stream: inputStream, cleanup: () => {} };
   }
 
   const source = audioCtx.createMediaStreamSource(inputStream);
-  const preamp = audioCtx.createGain();
   const dry = audioCtx.createGain();
-  const limiter = audioCtx.createDynamicsCompressor();
   const destination = audioCtx.createMediaStreamDestination();
-  let mainOut = preamp;
-  const nodes = [source, preamp, dry, limiter];
-
-  preamp.gain.value = micRecordGain;
-  limiter.threshold.value = -8;
-  limiter.knee.value = 12;
-  limiter.ratio.value = 8;
-  limiter.attack.value = 0.003;
-  limiter.release.value = 0.18;
-  source.connect(preamp);
+  let mainOut = source;
+  const nodes = [source, dry];
 
   if (bassOn) {
     const lowShelf = audioCtx.createBiquadFilter();
@@ -516,7 +544,7 @@ function createProcessedRecorderStream() {
 
   dry.gain.value = echoOn ? 0.86 : 1;
   mainOut.connect(dry);
-  dry.connect(limiter);
+  dry.connect(destination);
 
   if (echoOn) {
     const delay = audioCtx.createDelay(1);
@@ -529,13 +557,11 @@ function createProcessedRecorderStream() {
 
     mainOut.connect(delay);
     delay.connect(wet);
-    wet.connect(limiter);
+    wet.connect(destination);
     delay.connect(feedback);
     feedback.connect(delay);
     nodes.push(delay, feedback, wet);
   }
-
-  limiter.connect(destination);
 
   const cleanup = () => {
     nodes.forEach((node) => {
@@ -910,6 +936,7 @@ async function startPadRecording(button, name, slotIndex) {
         if (captured.robotize) {
           originalBuffer = makeRobotBuffer(originalBuffer);
         }
+        originalBuffer = normalizeRecordedBuffer(originalBuffer);
         const buffer = makeIntervalBuffer(originalBuffer, sourceIntervals[captured.slotIndex]);
         const gainNode = audioCtx.createGain();
         gainNode.gain.value = 1;
